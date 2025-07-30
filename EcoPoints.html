@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>EcoPoints</title>
+  <style>
+    /* Reset básico */
+    * {
+      margin: 0; 
+      padding: 0; 
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #74ebd5 0%, #ACB6E5 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #2c3e50;
+    }
+
+    #app {
+      background: white;
+      border-radius: 12px;
+      width: 360px;
+      padding: 20px 30px;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+    }
+
+    h1 {
+      color: #2ecc71;
+      text-align: center;
+      margin-bottom: 15px;
+      font-weight: 900;
+      letter-spacing: 3px;
+    }
+
+    h2, h3 {
+      color: #34495e;
+      margin-bottom: 15px;
+      font-weight: 700;
+    }
+
+    .screen {
+      display: block;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    input[type="text"], input[type="password"], input[type="number"], select {
+      width: 100%;
+      padding: 10px 15px;
+      margin-bottom: 15px;
+      border-radius: 8px;
+      border: 1.8px solid #ddd;
+      font-size: 16px;
+      transition: border-color 0.3s ease;
+    }
+
+    input[type="text"]:focus, input[type="password"]:focus, input[type="number"]:focus, select:focus {
+      outline: none;
+      border-color: #27ae60;
+    }
+
+    button {
+      background: #27ae60;
+      color: white;
+      border: none;
+      padding: 12px 0;
+      width: 100%;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 18px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      margin-bottom: 12px;
+      box-shadow: 0 5px 10px rgba(39, 174, 96, 0.4);
+    }
+
+    button:hover {
+      background: #2ecc71;
+    }
+
+    p {
+      font-size: 14px;
+      text-align: center;
+    }
+
+    a {
+      color: #27ae60;
+      cursor: pointer;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    #teacher-students {
+      max-height: 160px;
+      overflow-y: auto;
+      margin-bottom: 15px;
+      background: #ecf0f1;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 14px;
+      color: #2c3e50;
+    }
+
+    #options button {
+      margin: 5px 5px 5px 0;
+      width: calc(50% - 5px);
+    }
+
+    #game-result {
+      font-weight: 700;
+      margin-top: 10px;
+      min-height: 22px;
+      color: #2980b9;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- Pantalla de inicio de sesión -->
+    <div id="login-screen" class="screen">
+      <h1>EcoPoints</h1>
+      <h3>Iniciar sesión</h3>
+      <input type="text" id="login-username" placeholder="Nombre de usuario" />
+      <input type="password" id="login-password" placeholder="Contraseña" />
+      <button onclick="loginUser()">Entrar</button>
+      <p>¿No tienes cuenta? <a href="#" onclick="toggleRegister(true)">Regístrate</a></p>
+    </div>
+
+    <!-- Pantalla de registro -->
+    <div id="register-screen" class="screen hidden">
+      <h3>Registro</h3>
+      <input type="text" id="reg-username" placeholder="Nombre" />
+      <input type="password" id="reg-password" placeholder="Contraseña" />
+      <select id="reg-role">
+        <option value="student">Estudiante</option>
+        <option value="teacher">Maestro</option>
+      </select>
+      <button onclick="registerUser()">Registrar</button>
+      <p>¿Ya tienes cuenta? <a href="#" onclick="toggleRegister(false)">Inicia sesión</a></p>
+    </div>
+
+    <!-- Panel de estudiante -->
+    <div id="student-screen" class="screen hidden">
+      <h2>Bienvenido, <span id="student-name"></span></h2>
+      <p>Libras registradas: <span id="student-pounds">0</span></p>
+      <p>Puntos digitales: <span id="student-points">0</span></p>
+      <p>Puntos extra: <span id="student-bonus">0</span></p>
+      <button onclick="startGame()">🎮 Jugar para ganar puntos</button>
+      <button onclick="logout()">Cerrar sesión</button>
+    </div>
+
+    <!-- Panel de maestro -->
+    <div id="teacher-screen" class="screen hidden">
+      <h2>Panel del Maestro</h2>
+      <div id="teacher-students"></div>
+      <input type="text" id="input-username" placeholder="Nombre del estudiante" />
+      <input type="number" id="input-pounds" placeholder="Libras de papel reciclado" />
+      <button onclick="addPoundsToStudent()">Registrar Libras</button>
+      <button onclick="logout()">Cerrar sesión</button>
+    </div>
+
+    <!-- Juego simple de preguntas -->
+    <div id="game-screen" class="screen hidden">
+      <h2>Juego de Trivia Ecológica 🌱</h2>
+      <p id="question"></p>
+      <div id="options"></div>
+      <p id="game-result"></p>
+      <button onclick="nextQuestion()">Siguiente</button>
+      <button onclick="exitGame()">Salir del juego</button>
+    </div>
+  </div>
+
+  <script>
+    const storageKey = 'ecopoints_users';
+    let currentUser = null;
+    let currentQuestion = 0;
+
+    const questions = [
+      {
+        q: "¿Qué material es reciclable?",
+        options: ["Papel", "Comida", "Ropa mojada", "Aceite usado"],
+        answer: 0
+      },
+      {
+        q: "¿Cuántos litros de agua se ahorran reciclando 1kg de papel?",
+        options: ["10", "50", "100", "200"],
+        answer: 3
+      },
+      {
+        q: "¿Qué color representa el reciclaje del vidrio?",
+        options: ["Rojo", "Verde", "Amarillo", "Negro"],
+        answer: 1
+      },
+      {
+        q: "¿Qué tipo de bolsa es mejor para el medio ambiente?",
+        options: ["Plástica", "Papel", "Tela reutilizable", "Ninguna"],
+        answer: 2
+      },
+      {
+        q: "¿Cuál es el objetivo del reciclaje?",
+        options: ["Ganar dinero", "Reducir residuos y proteger el planeta", "Aumentar la basura", "Quemar más plástico"],
+        answer: 1
+      }
+    ];
+
+    function loadUsers() {
+      return JSON.parse(localStorage.getItem(storageKey)) || [];
+    }
+
+    function saveUsers(users) {
+      localStorage.setItem(storageKey, JSON.stringify(users));
+    }
+
+    function registerUser() {
+      const username = document.getElementById('reg-username').value.trim();
+      const password = document.getElementById('reg-password').value.trim();
+      const role = document.getElementById('reg-role').value;
+      if (!username || !password) return alert('Completa todos los campos');
+
+      const users = loadUsers();
+      if (users.find(u => u.username === username)) return alert('Usuario ya existe');
+
+      users.push({ username, password, role, pounds: 0, points: 0 });
+      saveUsers(users);
+      alert('Registro exitoso. Ahora puedes iniciar sesión');
+      toggleRegister(false);
+    }
+
+    function loginUser() {
+      const username = document.getElementById('login-username').value.trim();
+      const password = document.getElementById('login-password').value.trim();
+      const users = loadUsers();
+      const user = users.find(u => u.username === username && u.password === password);
+
+      if (!user) return alert('Usuario o contraseña incorrectos');
+      currentUser = user;
+      if (user.role === 'student') showStudentPanel(user);
+      else showTeacherPanel();
+    }
+
+    function showStudentPanel(user) {
+      hideAll();
+      document.getElementById('student-name').textContent = user.username;
+      document.getElementById('student-pounds').textContent = user.pounds;
+      document.getElementById('student-points').textContent = user.points;
+      document.getElementById('student-bonus').textContent = Math.floor(user.points / 40) * 5;
+      document.getElementById('student-screen').classList.remove('hidden');
+    }
+
+    function showTeacherPanel() {
+      hideAll();
+      const users = loadUsers().filter(u => u.role === 'student');
+      const container = document.getElementById('teacher-students');
+      container.innerHTML = '<h3>Estudiantes registrados:</h3>';
+      users.forEach(u => {
+        container.innerHTML += `<p>${u.username} - Libras: ${u.pounds}, Puntos: ${u.points}, Extra: ${Math.floor(u.points / 40) * 5}</p>`;
+      });
+      document.getElementById('teacher-screen').classList.remove('hidden');
+    }
+
+    function logout() {
+      currentUser = null;
+      hideAll();
+      document.getElementById('login-screen').classList.remove('hidden');
+    }
+
+    function toggleRegister(show) {
+      document.getElementById('login-screen').classList.toggle('hidden', show);
+      document.getElementById('register-screen').classList.toggle('hidden', !show);
+    }
+
+    function hideAll() {
+      document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+    }
+
+    function startGame() {
+      currentQuestion = 0;
+      hideAll();
+      document.getElementById('game-screen').classList.remove('hidden');
+      showQuestion();
+    }
+
+    function showQuestion() {
+      const q = questions[currentQuestion];
+      document.getElementById('question').textContent = q.q;
+      const optionsDiv = document.getElementById('options');
+      optionsDiv.innerHTML = '';
+      q.options.forEach((opt, i) => {
+        const btn = document.createElement('button');
+        btn.textContent = opt;
+        btn.onclick = () => checkAnswer(i);
+        optionsDiv.appendChild(btn);
+      });
+      document.getElementById('game-result').textContent = '';
+    }
+
+    function checkAnswer(index) {
+      const correct = questions[currentQuestion].answer;
+      const result = document.getElementById('game-result');
+      if (index === correct) {
+        result.textContent = '¡Correcto! +5 puntos';
+        currentUser.points += 5;
+        const users = loadUsers();
+        const i = users.findIndex(u => u.username === currentUser.username);
+        users[i] = currentUser;
+        saveUsers(users);
+        document.getElementById('student-points').textContent = currentUser.points;
+        document.getElementById('student-bonus').textContent = Math.floor(currentUser.points / 40) * 5;
+      } else {
+        result.textContent = 'Incorrecto. Intenta otra pregunta';
+      }
+    }
+
+    function nextQuestion() {
+      currentQuestion++;
+      if (currentQuestion < questions.length) {
+        showQuestion();
+      } else {
+        alert('¡Has completado el juego!');
+        exitGame();
+      }
+    }
+
+    function exitGame() {
+      showStudentPanel(currentUser);
+    }
+
+    function addPoundsToStudent() {
+      const username = document.getElementById('input-username').value.trim();
+      const pounds = parseFloat(document.getElementById('input-pounds').value);
+      if (!username || isNaN(pounds) || pounds <= 0) return alert('Datos inválidos');
+
+      const users = loadUsers();
+      const i = users.findIndex(u => u.username === username && u.role === 'student');
+      if (i === -1) return alert('Estudiante no encontrado');
+
+      users[i].pounds += pounds;
+      users[i].points += pounds * 5;
+      saveUsers(users);
+      alert('Libras registradas correctamente');
+      document.getElementById('input-username').value = '';
+      document.getElementById('input-pounds').value = '';
+      showTeacherPanel();
+    }
+  </script>
+</body>
+</html>
