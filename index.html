@@ -1,0 +1,1671 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>EcoPoints</title>
+<link rel="icon" type="image/png" href="ecofavi.png" />
+<style>
+  :root{
+    --green:#2e7d32;
+    --accent:#27ae60;
+    --bg1:#a8edea;
+    --bg2:#d6f5ec;
+    --card:#ffffff;
+    --muted:#667085;
+    --danger:#c62828;
+    --shadow:0 8px 24px rgba(0,0,0,.08);
+    --radius:16px;
+    --orange:#ffb76b;
+    --sky:#4fc3f7;
+    --yellow:#fff6bf;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;
+    background: linear-gradient(180deg,var(--bg1),var(--bg2));
+    color:#111;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:16px;
+  }
+  .app{
+    width:100%;
+    max-width:520px;
+    background:var(--card);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    overflow:hidden;
+  }
+  header{
+    padding:20px 16px;
+    text-align:center;
+    background:#e8fff3;
+    border-bottom:1px solid #e8e8e8;
+  }
+  header h1{ margin:6px 0 2px; font-size:28px; letter-spacing:.3px; color:#1f2937; }
+  header p{ margin:0; color:var(--muted) }
+  .logo{
+    width:84px;height:84px;margin:auto;border-radius:50%;
+    background:#ffffff;border:8px solid #d8f5e7;overflow:hidden;display:block;
+  }
+  .logo img{ width:100%; height:100%; object-fit:contain; display:block; }
+  .container{ padding:16px }
+  h2{ margin:8px 0 12px }
+  label.cfg{display:block;font-size:13px;margin-top:8px;color:var(--muted)}
+  .btn{
+    appearance:none;border:0;cursor:pointer;width:100%;
+    background:var(--accent);color:#fff;font-weight:700;
+    padding:14px 16px;margin:8px 0;border-radius:12px;font-size:16px;
+  }
+  .btn.secondary{background:#e6f5ec;color:#1b4332;font-weight:600}
+  .btn.outline{background:#fff;border:1px solid #d0d5dd;color:#1f2937}
+  .btn.danger{background:var(--danger)}
+  .btn.small{width:auto;padding:10px 12px;font-size:14px}
+  .btn.orange{background:var(--orange);color:#3b2700}
+  .btn.sky{background:var(--sky);color:#04242f}
+  .btn.yellow{background:var(--yellow);color:#5a3b00}
+  .row{display:flex;gap:8px;flex-wrap:wrap}
+  input,select,textarea{
+    width:100%;padding:12px 14px;border:1px solid #d0d5dd;border-radius:12px;
+    font-size:16px;outline:none;background:#fff;
+  }
+  input:focus,select:focus,textarea:focus{border-color:#7fcaa0;box-shadow:0 0 0 3px rgba(39,174,96,.15)}
+  .card{
+    background:#f9fafb;border:1px solid #eef2f7;border-radius:14px;padding:12px 14px;margin:10px 0;
+  }
+  .stat{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px dashed #e5e7eb}
+  .stat:last-child{border-bottom:0}
+  small{color:var(--muted)}
+  .hidden{display:none !important}
+  .hist{
+    background:#fff;border:1px solid #e5e7eb;border-radius:12px;
+    max-height:260px;overflow-y:auto;padding:10px 12px;font-size:14px;
+  }
+  .hist p{margin:8px 0}
+  .pill{
+    display:inline-block;padding:2px 8px;border-radius:999px;background:#e9f7ef;color:#1b5e20;font-weight:600;font-size:12px
+  }
+  .top-actions{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+  .link{background:none;border:0;color:#2f855a;text-decoration:underline;cursor:pointer}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .table-wrap{overflow:auto;border:1px solid #e5e7eb;background:#fff;border-radius:12px}
+  table{width:100%;border-collapse:collapse;font-size:14px;min-width:320px}
+  th,td{padding:10px 12px;border-bottom:1px solid #eef2f7;text-align:left;white-space:nowrap}
+  th{background:#f8fafc;font-weight:700}
+  tr:last-child td{border-bottom:0}
+  .inline-eye{display:flex;gap:8px;align-items:center}
+  @media (min-width:600px){
+    header h1{font-size:30px}
+    .logo{width:108px;height:108px}
+  }
+</style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div class="logo"><img src="ecologo.png" alt="EcoPoints logo" /></div>
+      <h1>EcoPoints</h1>
+      <p>Puntos ecológicos</p>
+    </header>
+
+    <div class="container">
+
+      <!-- HOME -->
+      <section id="home">
+        <button class="btn" onclick="go('login')">Iniciar sesión</button>
+        <button class="btn secondary" onclick="go('adminAccess')">Acceder como administrador</button>
+      </section>
+
+      <!-- ADMIN ACCESS (pantalla dedicada) -->
+      <section id="adminAccess" class="hidden">
+        <h2>Administrador</h2>
+        <div class="card">
+          <div class="inline-eye">
+            <input id="adminPass" type="password" placeholder="Contraseña de administrador (8–20)" />
+            <button class="btn outline small" onclick="togglePwd('adminPass', this)">Mostrar</button>
+          </div>
+          <div id="adminErr" style="color:#c62828;font-size:14px"></div>
+          <div class="row">
+            <button class="btn" onclick="doAdminAccess()">Entrar como administrador</button>
+            <button class="btn secondary" onclick="go('home')">← Volver</button>
+          </div>
+          <small>Consejo: el administrador solo puede entrar desde este apartado.</small>
+        </div>
+      </section>
+
+      <!-- LOGIN -->
+      <section id="login" class="hidden">
+        <h2>Iniciar sesión</h2>
+        <select id="lRole">
+          <option value="alumno" selected>Alumno</option>
+          <option value="maestro">Maestro de clase</option>
+          <option value="encargado">Maestro encargado de reciclaje</option>
+        </select>
+        <input id="lUser" placeholder="Usuario" autocomplete="off" />
+        <div class="inline-eye">
+          <input id="lPass" type="password" placeholder="Contraseña" />
+          <button class="btn outline small" onclick="togglePwd('lPass', this)">Mostrar</button>
+        </div>
+        <div id="loginAlumnoFields" class="row">
+          <input id="lGrado" type="number" inputmode="numeric" placeholder="Grado (solo Alumnos)" />
+          <input id="lSeccion" type="number" inputmode="numeric" placeholder="Sección (solo Alumnos)" />
+        </div>
+        <div id="lError" style="color:#c62828;font-size:14px"></div>
+        <div class="row">
+            <button class="btn" onclick="doLogin()">Entrar</button>
+            <button class="btn secondary" onclick="go('home')">← Volver</button>
+        </div>
+        <small>Si eres administrador, usa <b>"Acceder como administrador"</b> en la pantalla de inicio.</small>
+      </section>
+
+      <!-- DASHBOARD ADMIN -->
+      <section id="dashAdmin" class="hidden">
+        <div class="top-actions">
+          <span class="pill">Administrador</span>
+          <div style="margin-left:auto"></div>
+          <button class="link" onclick="logout()">Cerrar sesión</button>
+        </div>
+        <h2>Panel principal</h2>
+
+        <!-- Botones reordenados y recoloreados según tu petición -->
+        <div class="grid-2">
+          <button class="btn small" onclick="openAdminSection('admin_reg')">Registrar usuario</button>
+          <button class="btn small danger" onclick="openAdminSection('admin_del')">Borrar usuarios</button>
+
+          <button class="btn small outline" onclick="openAdminSection('admin_wipe')">Borrar solo datos</button>
+          <button class="btn small outline" onclick="openAdminSection('admin_upd')">Actualizar grado/sección</button>
+
+          <button class="btn small sky" onclick="openAdminSection('admin_rename')">Cambiar nombre de usuario</button>
+          <button class="btn small orange" onclick="openAdminSection('admin_passchange')">Cambiar contraseña</button>
+
+          <button class="btn small outline" onclick="openAdminSection('admin_config_ep')">Configurar EcoPoints</button>
+          <button class="btn small outline" onclick="openAdminSection('admin_config_extra')">Configurar puntos extra</button>
+
+          <button class="btn small yellow" onclick="openAdminSection('admin_view')">Ver usuarios</button>
+          <button class="btn small yellow" onclick="openAdminSection('admin_historial')">Ver historial de los usuarios</button>
+        </div>
+      </section>
+
+      <!-- ADMIN: Registrar usuario (sección aparte) -->
+      <section id="admin_reg" class="hidden">
+        <div class="top-actions">
+          <h3>Registrar usuario</h3>
+          <div style="margin-left:auto"></div>
+          <button class="btn outline small" onclick="goBackToAdmin()">← Volver</button>
+        </div>
+        <div class="card">
+          <select id="rRole">
+            <option value="alumno" selected>Alumno</option>
+            <option value="maestro">Maestro de clase</option>
+            <option value="encargado">Maestro encargado de reciclaje</option>
+          </select>
+          <input id="rUser" placeholder="Usuario" />
+          <div class="inline-eye">
+            <input id="rPass" type="password" placeholder="Contraseña (8–20 caracteres)" />
+            <button class="btn outline small" onclick="togglePwd('rPass', this)">Mostrar</button>
+          </div>
+          <div id="regAlumnoFields" class="row">
+            <input id="rGrado" type="number" inputmode="numeric" placeholder="Grado (solo alumnos)" />
+            <input id="rSeccion" type="number" inputmode="numeric" placeholder="Sección (solo alumnos)" />
+          </div>
+          <button class="btn" onclick="adminRegister()">Registrar</button>
+          <div id="rMsg" style="color:#c62828;font-size:14px"></div>
+        </div>
+      </section>
+
+      <!-- ADMIN: Borrar usuarios (sección aparte) -->
+      <section id="admin_del" class="hidden">
+        <div class="top-actions">
+          <h3>Borrar usuarios</h3>
+          <div style="margin-left:auto"></div>
+          <button class="btn outline small" onclick="goBackToAdmin()">← Volver</button>
+        </div>
+        <div class="card">
+          <select id="dRole">
+            <option value="" selected>Selecciona rol…</option>
+            <option value="alumno">Alumno</option>
+            <option value="maestro">Maestro de clase</option>
+            <option value="encargado">Maestro encargado de reciclaje</option>
+          </select>
+          <input id="dUser" placeholder="Usuario a borrar" />
+          <div id="delAlumnoFields" class="row hidden">
+            <input id="dGrado" type="number" inputmode="numeric" placeholder="Grado (solo alumno)" />
+            <input id="dSeccion" type="number" inputmode="numeric" placeholder="Sección (solo alumno)" />
+          </div>
+          <button class="btn danger" onclick="adminDeleteUser()">Borrar por nombre y rol</button>
+          <div class="grid-2" style="margin-top:8px">
+            <button class="btn danger small" onclick="adminDeleteByRole('alumno')">Borrar todos los alumnos</button>
+            <button class="btn danger small" onclick="adminDeleteByRole('maestro')">Borrar todos los maestros</button>
+            <button class="btn danger small" onclick="adminDeleteByRole('encargado')">Borrar todos los maestros encargados de reciclaje</button>
+          </div>
+          <small>El Administrador no puede borrarse.</small>
+        </div>
+      </section>
+
+      <!-- ADMIN: Borrar solo datos -->
+      <section id="admin_wipe" class="hidden">
+        <div class="top-actions">
+          <h3>Borrar datos de usuarios</h3>
+          <div style="margin-left:auto"></div>
+          <button class="btn outline small" onclick="goBackToAdmin()">← Volver</button>
+        </div>
+        <div class="card">
+          <select id="wRole">
+            <option value="" selected>Selecciona rol…</option>
+            <option value="alumno">Alumno</option>
+            <option value="maestro">Maestro de clase</option>
+            <option value="encargado">Maestro encargado de reciclaje</option>
+          </select>
+          <input id="wUser" placeholder="Usuario para limpiar datos" />
+          <div id="wipeAlumnoFields" class="row hidden">
+            <input id="wGrado" type="number" inputmode="numeric" placeholder="Grado (solo alumno)" />
+            <input id="wSeccion" type="number" inputmode="numeric" placeholder="Sección (solo alumno)" />
+          </div>
+          <button class="btn outline" onclick="adminWipeUser()">Borrar datos por nombre y rol</button>
+          <div class="grid-2" style="margin-top:8px">
+            <button class="btn outline small" onclick="adminWipeByRole('alumno')">Borrar datos de alumnos</button>
+            <button class="btn outline small" onclick="adminWipeByRole('maestro')">Borrar datos de maestros</button>
+            <button class="btn outline small" onclick="adminWipeByRole('encargado')">Borrar datos de maestros encargados de reciclaje</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ADMIN: Actualizar grado/sección -->
+      <section id="admin_upd" class="hidden">
+        <div class="top-actions">
+          <h3>Actualizar grado y sección (Alumno)</h3>
+          <div style="margin-left:auto"></div>
+          <button class="btn outline small" onclick="goBackToAdmin()">← Volver</button>
+        </div>
+        <div class="card">
+          <input id="uUser" placeholder="Usuario del alumno" />
+          <div class="row">
+            <input id="uGrado" type="number" inputmode="numeric" placeholder="Nuevo grado" />
+            <input id="uSeccion" type="number" inputmode="numeric" placeholder="Nueva sección" />
+          </div>
+          <button class="btn outline" onclick="adminUpdateGrade()">Actualizar</button>
+          <div id="uMsg" style="color:#c62828;font-size:14px"></div>
+        </div>
+      </section>
+
+      <!-- ADMIN: Cambiar nombre de usuario -->
+      <section id="admin_rename" class="hidden">
+        <div class="top-actions">
+          <h3>Cambiar nombre de usuario</h3>
+          <div style="margin-left:auto"></div>
+          <button class="btn outline small" onclick="goBackToAdmin()">← Volver</button>
+        </div>
+        <div class="card">
+          <select id="renRole">
+            <option value="" selected>Selecciona rol…</option>
+            <option value="alumno">Alumno</option>
+            <option value="maestro">Maestro de clase</option>
+            <option value="encargado">Maestro encargado de reciclaje</option>
+          </select>
+          <input id="renUser" placeholder="Usuario actual" />
+          <div id="renAlumnoFields" class="row hidden">
+            <input id="renGrado" type="number" inputmode="numeric" placeholder="Grado actual (solo alumno)" />
+            <input id="renSeccion" type="number" inputmode="numeric" placeholder="Sección actual (solo alumno)" />
+          </div>
+          <input id="renNewUser" placeholder="Usuario nuevo" />
+          <button class="btn outline" onclick="adminRenameUser()">Cambiar usuario</button>
+        </div>
+      </section>
+
+      <!-- ADMIN: Cambiar contraseña -->
+      <section id="admin_passchange" class="hidden">
+        <div class="top-actions">
+          <h3>Cambiar contraseña de un usuario</h3>
+          <div style="margin-left:auto"></div>
+          <button class="btn outline small" onclick="goBackToAdmin()">← Volver</button>
+        </div>
+        <div class="card">
+          <select id="pcRole">
+            <option value="" selected>Selecciona rol…</option>
+            <option value="alumno">Alumno</option>
+            <option value="maestro">Maestro de clase</option>
+            <option value="encargado">Maestro encargado de reciclaje</option>
+          </select>
+          <input id="pcUser" placeholder="Usuario" />
+          <div id="pcAlumnoFields" class="row hidden">
+            <input id="pcGrado" type="number" inputmode="numeric" placeholder="Grado actual (solo alumno)" />
+            <input id="pcSeccion" type="number" inputmode="numeric" placeholder="Sección actual (solo alumno)" />
+          </div>
+          <div class="inline-eye">
+            <input id="pcPass" type="password" placeholder="Nueva contraseña (8–20)" />
+            <button class="btn outline small" onclick="togglePwd('pcPass', this)">Mostrar</button>
+          </div>
+          <button class="btn outline" onclick="adminChangePass()">Cambiar contraseña</button>
+        </div>
+      </section>
+
+      <!-- ADMIN: Configurar EcoPoints -->
+      <section id="admin_config_ep" class="hidden">
+        <div class="top-actions">
+          <h3>Configurar conversión de reciclaje a EcoPoints</h3>
+          <div style="margin-left:auto"></div>
+          <button class="btn outline small" onclick="goBackToAdmin()">← Volver</button>
+        </div>
+
+        <div class="card">
+          <small>Define cuántos EcoPoints se registran por unidad de reciclaje. Deja en blanco para usar los valores predeterminados.</small>
+
+          <label class="cfg">Cantidad de EcoPoints por cada libra de papel</label>
+          <input id="cfgPaper" type="number" inputmode="decimal" placeholder="Ej. 10 (predet. 10)" />
+
+          <label class="cfg">Cantidad de EcoPoints por cada lata</label>
+          <input id="cfgLata" type="number" inputmode="decimal" placeholder="Ej. 1 (predet. 1)" />
+
+          <label class="cfg">Cantidad de EcoPoints por cada botella plástica</label>
+          <input id="cfgBotella" type="number" inputmode="decimal" placeholder="Ej. 1 (predet. 1)" />
+
+          <button class="btn" onclick="adminSaveConfigEP()">Guardar</button>
+          <div id="cfgEPMsg" style="color:#c62828;font-size:14px"></div>
+        </div>
+      </section>
+
+      <!-- ADMIN: Configurar puntos extra -->
+      <section id="admin_config_extra" class="hidden">
+        <div class="top-actions">
+          <h3>Configurar conversión de EcoPoints a puntos extra</h3>
+          <div style="margin-left:auto"></div>
+          <button class="btn outline small" onclick="goBackToAdmin()">← Volver</button>
+        </div>
+
+        <div class="card">
+          <small>Define cuántos EcoPoints se convertirán automáticamente en 1 punto extra. Deja en blanco para usar el valor predeterminado (100).</small>
+
+          <label class="cfg">Cantidad de EcoPoints que se transformarán en 1 punto extra</label>
+          <input id="cfgExtra" type="number" inputmode="numeric" placeholder="Ej. 100 (predet. 100)" />
+
+          <button class="btn" onclick="adminSaveConfigExtra()">Guardar</button>
+          <div id="cfgExtraMsg" style="color:#c62828;font-size:14px"></div>
+        </div>
+      </section>
+
+      <!-- ADMIN: Ver usuarios -->
+      <section id="admin_view" class="hidden">
+        <div class="top-actions">
+          <h3>Ver usuarios</h3>
+          <div style="margin-left:auto"></div>
+          <button class="btn outline small" onclick="goBackToAdmin()">← Volver</button>
+        </div>
+        <div class="card">
+          <div class="row">
+            <button class="btn small outline" onclick="adminViewUsers('encargado')">Maestros encargados de reciclaje</button>
+            <button class="btn small outline" onclick="adminViewUsers('maestro')">Maestros de clase</button>
+            <button class="btn small outline" onclick="adminViewUsers('alumno')">Alumnos</button>
+          </div>
+          <input id="viewSearch" class="hidden" placeholder="Buscar por texto…" />
+          <div id="viewTitle" style="margin-top:6px;color:#1f2937;font-weight:600"></div>
+          <div id="viewTable" class="table-wrap" style="margin-top:8px"></div>
+          <small id="viewHint" class="hidden">Consejo: usa el buscador y desliza horizontalmente si la tabla no cabe.</small>
+        </div>
+      </section>
+
+      <!-- ADMIN: Ver historial de usuarios -->
+      <section id="admin_historial" class="hidden">
+        <div class="top-actions">
+          <h3>Consultar historial de usuarios</h3>
+          <div style="margin-left:auto"></div>
+          <button class="btn outline small" onclick="goBackToAdmin()">← Volver</button>
+        </div>
+        <div class="card">
+          <div class="row">
+            <button class="btn outline small" onclick="openAdminHistorialSection('admin_hist_alumnos')">Consultar historial de alumnos</button>
+            <button class="btn outline small" onclick="openAdminHistorialSection('admin_hist_maestros')">Consultar historial de maestros de clase</button>
+            <button class="btn outline small" onclick="openAdminHistorialSection('admin_hist_encargados')">Consultar historial de maestros encargados de reciclaje</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ADMIN: Historial de alumnos -->
+      <section id="admin_hist_alumnos" class="hidden">
+        <div class="top-actions">
+          <h3>Consultar historial de alumnos</h3>
+          <div style="margin-left:auto"></div>
+          <button class="btn outline small" onclick="goBackToAdminHistorial()">← Volver</button>
+        </div>
+        <div class="card">
+          <input id="ahUserAlumno" placeholder="Usuario del alumno" />
+          <div class="row">
+            <input id="ahGradoAlumno" type="number" inputmode="numeric" placeholder="Grado" />
+            <input id="ahSeccionAlumno" type="number" inputmode="numeric" placeholder="Sección" />
+          </div>
+          <button class="btn" onclick="adminConsultarHistorialAlumno()">Consultar historial</button>
+          <div id="ahResultadoAlumno" class="table-wrap" style="margin-top:12px"></div>
+        </div>
+      </section>
+
+      <!-- ADMIN: Historial de maestros -->
+      <section id="admin_hist_maestros" class="hidden">
+        <div class="top-actions">
+          <h3>Consultar historial de maestros de clase</h3>
+          <div style="margin-left:auto"></div>
+          <button class="btn outline small" onclick="goBackToAdminHistorial()">← Volver</button>
+        </div>
+        <div class="card">
+          <input id="ahUserMaestro" placeholder="Usuario del maestro" />
+          <button class="btn" onclick="adminConsultarHistorialMaestro()">Consultar historial</button>
+          <div id="ahResultadoMaestro" class="table-wrap" style="margin-top:12px"></div>
+        </div>
+      </section>
+
+      <!-- ADMIN: Historial de encargados -->
+      <section id="admin_hist_encargados" class="hidden">
+        <div class="top-actions">
+          <h3>Consultar historial de maestros encargados de reciclaje</h3>
+          <div style="margin-left:auto"></div>
+          <button class="btn outline small" onclick="goBackToAdminHistorial()">← Volver</button>
+        </div>
+        <div class="card">
+          <input id="ahUserEncargado" placeholder="Usuario del maestro encargado de reciclaje" />
+          <button class="btn" onclick="adminConsultarHistorialEncargado()">Consultar historial</button>
+          <div id="ahResultadoEncargado" class="table-wrap" style="margin-top:12px"></div>
+        </div>
+      </section>
+
+      <!-- DASHBOARD ALUMNO -->
+      <section id="dashAlumno" class="hidden">
+        <div class="top-actions">
+          <span class="pill">Alumno</span>
+          <div style="margin-left:auto"></div>
+          <button class="link" onclick="logout()">Cerrar sesión</button>
+        </div>
+        <h2 id="alNombre">Alumno</h2>
+        <div class="card">
+          <div class="stat"><strong>Grado</strong> <span id="alGrado">-</span></div>
+          <div class="stat"><strong>Sección</strong> <span id="alSeccion">-</span></div>
+          <div class="stat"><strong>EcoPoints</strong> <span id="alEco">0</span></div>
+          <div class="stat"><strong>Puntos extra</strong> <span id="alExtra">0</span></div>
+        </div>
+
+        <div class="row">
+          <button class="btn outline small" onclick="showHistory()">Historial</button>
+          <button class="btn outline small" onclick="openSectionFromRole('al_pass')">Cambiar contraseña</button>
+        </div>
+
+      </section>
+
+      <!-- ALUMNO: Cambiar contraseña (sección aparte) -->
+      <section id="al_pass" class="hidden">
+        <div class="top-actions">
+          <h3>Cambiar contraseña</h3>
+          <div style="margin-left:auto"></div>
+          <button class="btn outline small" onclick="goBackToRoleDashboard()">← Volver</button>
+        </div>
+        <div class="card">
+          <div class="inline-eye">
+            <input id="alNewPass" type="password" placeholder="Nueva contraseña (8–20)" />
+            <button class="btn outline small" onclick="togglePwd('alNewPass', this)">Mostrar</button>
+          </div>
+          <button class="btn" onclick="alumnoChangePass()">Guardar contraseña</button>
+        </div>
+      </section>
+
+      <!-- DASHBOARD MAESTRO -->
+      <section id="dashMaestro" class="hidden">
+        <div class="top-actions">
+          <span class="pill">Maestro de clase</span>
+          <div style="margin-left:auto"></div>
+          <button class="link" onclick="logout()">Cerrar sesión</button>
+        </div>
+        <h2 id="mNombre">Maestro</h2>
+
+        <div class="card">
+          <h3>Buscar alumno y canjear</h3>
+          <input id="mUser" placeholder="Usuario del alumno" />
+          <div class="row">
+            <input id="mGrado" type="number" inputmode="numeric" placeholder="Grado" />
+            <input id="mSeccion" type="number" inputmode="numeric" placeholder="Sección" />
+          </div>
+          <div class="row">
+            <input id="mClase" placeholder="Clase / asignatura" />
+            <input id="mPuntos" type="number" inputmode="numeric" placeholder="Puntos extra a usar" />
+          </div>
+          <div class="row">
+            <button class="btn outline" onclick="maestroConsultar()">Ver saldos</button>
+            <button class="btn" onclick="maestroCanjear()">Canjear</button>
+          </div>
+          <div id="mResumen" class="card hidden" style="margin-top:10px">
+            <div class="stat"><strong>EcoPoints</strong> <span id="mEco">0</span></div>
+            <div class="stat"><strong>Puntos extra</strong> <span id="mExtra">0</span></div>
+          </div>
+        </div>
+
+        <div class="row">
+          <button class="btn outline small" onclick="showHistory()">Historial</button>
+          <button class="btn outline small" onclick="openSectionFromRole('m_hist_alumnos')">Consultar historial de alumnos</button>
+          <button class="btn outline small" onclick="openSectionFromRole('m_pass')">Cambiar contraseña</button>
+        </div>
+      </section>
+
+      <!-- MAESTRO: cambiar contraseña (sección aparte) -->
+      <section id="m_pass" class="hidden">
+        <div class="top-actions">
+          <h3>Cambiar contraseña</h3>
+          <div style="margin-left:auto"></div>
+          <button class="btn outline small" onclick="goBackToRoleDashboard()">← Volver</button>
+        </div>
+        <div class="card">
+          <div class="inline-eye">
+            <input id="mNewPass" type="password" placeholder="Nueva contraseña (8–20)" />
+            <button class="btn outline small" onclick="togglePwd('mNewPass', this)">Show</button>
+          </div>
+          <button class="btn" onclick="maestroChangePass()">Guardar contraseña</button>
+        </div>
+      </section>
+
+      <!-- MAESTRO: Consultar historial de alumnos -->
+      <section id="m_hist_alumnos" class="hidden">
+        <div class="top-actions">
+          <h3>Consultar historial de alumnos</h3>
+          <div style="margin-left:auto"></div>
+          <button class="btn outline small" onclick="goBackToRoleDashboard()">← Volver</button>
+        </div>
+        <div class="card">
+          <input id="mhUserAlumno" placeholder="Usuario del alumno" />
+          <div class="row">
+            <input id="mhGradoAlumno" type="number" inputmode="numeric" placeholder="Grado" />
+            <input id="mhSeccionAlumno" type="number" inputmode="numeric" placeholder="Sección" />
+          </div>
+          <button class="btn" onclick="maestroConsultarHistorialAlumno()">Consultar historial</button>
+          <div id="mhResultadoAlumno" class="table-wrap" style="margin-top:12px"></div>
+        </div>
+      </section>
+
+      <!-- DASHBOARD ENCARGADO -->
+      <section id="dashEncargado" class="hidden">
+        <div class="top-actions">
+          <span class="pill">Maestro encargado de reciclaje</span>
+          <div style="margin-left:auto"></div>
+          <button class="link" onclick="logout()">Cerrar sesión</button>
+        </div>
+        <h2 id="eNombre">Maestro encargado de reciclaje</h2>
+
+        <div class="card">
+          <h3>Registrar reciclaje</h3>
+          <div class="row">
+            <button class="btn" onclick="openEncSection('enc_paper')">Registrar libras de papel</button>
+            <button class="btn orange" onclick="openEncSection('enc_lata')">Registrar latas</button>
+            <button class="btn sky" onclick="openEncSection('enc_botella')">Registrar botellas</button>
+          </div>
+        </div>
+
+        <div class="row">
+          <button class="btn outline small" onclick="showHistory()">Historial</button>
+          <button class="btn outline small" onclick="openSectionFromRole('e_hist_alumnos')">Consultar historial de alumnos</button>
+          <button class="btn outline small" onclick="openSectionFromRole('e_pass')">Cambiar contraseña</button>
+        </div>
+
+      </section>
+
+      <!-- ENCARGADO: Papel (sección propia) -->
+      <section id="enc_paper" class="hidden">
+        <div class="top-actions">
+          <h3>Registrar libras de papel</h3>
+          <div style="margin-left:auto"></div>
+          <button class="btn outline small" onclick="goBackToEncargado()">← Volver</button>
+        </div>
+        <div class="card">
+          <input id="eUserPaper" placeholder="Usuario del alumno" />
+          <div class="row">
+            <input id="eGradoPaper" type="number" inputmode="numeric" placeholder="Grado" />
+            <input id="eSeccionPaper" type="number" inputmode="numeric" placeholder="Sección" />
+          </div>
+          <div class="row">
+            <input id="eQtyPaper" type="number" inputmode="decimal" placeholder="Libras de papel" />
+            <button class="btn" onclick="encRegistrarType('paper')">Registrar ♻️</button>
+          </div>
+          <small>Cantidad en libras. Conversión a EcoPoints según configuración del administrador.</small>
+        </div>
+      </section>
+
+      <!-- ENCARGADO: Latas -->
+      <section id="enc_lata" class="hidden">
+        <div class="top-actions">
+          <h3>Registrar latas</h3>
+          <div style="margin-left:auto"></div>
+          <button class="btn outline small" onclick="goBackToEncargado()">← Volver</button>
+        </div>
+        <div class="card">
+          <input id="eUserLata" placeholder="Usuario del alumno" />
+          <div class="row">
+            <input id="eGradoLata" type="number" inputmode="numeric" placeholder="Grado" />
+            <input id="eSeccionLata" type="number" inputmode="numeric" placeholder="Sección" />
+          </div>
+          <div class="row">
+            <input id="eQtyLata" type="number" inputmode="numeric" placeholder="Cantidad de latas" />
+            <button class="btn orange" onclick="encRegistrarType('lata')">Registrar ♻️</button>
+          </div>
+          <small>Cantidad de latas. Conversión a EcoPoints según configuración del administrador.</small>
+        </div>
+      </section>
+
+      <!-- ENCARGADO: Botellas -->
+      <section id="enc_botella" class="hidden">
+        <div class="top-actions">
+          <h3>Registrar botellas plásticas</h3>
+          <div style="margin-left:auto"></div>
+          <button class="btn outline small" onclick="goBackToEncargado()">← Volver</button>
+        </div>
+        <div class="card">
+          <input id="eUserBotella" placeholder="Usuario del alumno" />
+          <div class="row">
+            <input id="eGradoBotella" type="number" inputmode="numeric" placeholder="Grado" />
+            <input id="eSeccionBotella" type="number" inputmode="numeric" placeholder="Sección" />
+          </div>
+          <div class="row">
+            <input id="eQtyBotella" type="number" inputmode="numeric" placeholder="Cantidad de botellas" />
+            <button class="btn sky" onclick="encRegistrarType('botella')">Registrar ♻️</button>
+          </div>
+          <small>Cantidad de botellas plásticas. Conversión a EcoPoints según configuración del administrador.</small>
+        </div>
+      </section>
+
+      <!-- ENCARGADO: cambiar contraseña -->
+      <section id="e_pass" class="hidden">
+        <div class="top-actions">
+          <h3>Cambiar contraseña</h3>
+          <div style="margin-left:auto"></div>
+          <button class="btn outline small" onclick="goBackToRoleDashboard()">← Volver</button>
+        </div>
+        <div class="card">
+          <div class="inline-eye">
+            <input id="eNewPass" type="password" placeholder="Nueva contraseña (8–20)" />
+            <button class="btn outline small" onclick="togglePwd('eNewPass', this)">Mostrar</button>
+          </div>
+          <button class="btn" onclick="encargadoChangePass()">Guardar contraseña</button>
+        </div>
+      </section>
+
+      <!-- ENCARGADO: Consultar historial de alumnos -->
+      <section id="e_hist_alumnos" class="hidden">
+        <div class="top-actions">
+          <h3>Consultar historial de alumnos</h3>
+          <div style="margin-left:auto"></div>
+          <button class="btn outline small" onclick="goBackToRoleDashboard()">← Volver</button>
+        </div>
+        <div class="card">
+          <input id="ehUserAlumno" placeholder="Usuario del alumno" />
+          <div class="row">
+            <input id="ehGradoAlumno" type="number" inputmode="numeric" placeholder="Grado" />
+            <input id="ehSeccionAlumno" type="number" inputmode="numeric" placeholder="Sección" />
+          </div>
+          <button class="btn" onclick="encargadoConsultarHistorialAlumno()">Consultar historial</button>
+          <div id="ehResultadoAlumno" class="table-wrap" style="margin-top:12px"></div>
+        </div>
+      </section>
+
+      <!-- HISTORIAL (sección global, vuelve al dashboard correspondiente) -->
+      <section id="histFull" class="hidden">
+        <div class="top-actions">
+          <h3 id="histFullTitle">Historial</h3>
+          <div style="margin-left:auto"></div>
+          <button class="btn outline small" onclick="goBackToRoleDashboard()">← Volver</button>
+        </div>
+        <div class="card">
+          <div id="histFullList" class="table-wrap"></div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+<script>
+/* ======= Fecha y hora (DD/MM/AAAA hh:mm AM/PM) ======= */
+function dateTime(){
+  const d=new Date();
+  const dd=String(d.getDate()).padStart(2,'0');
+  const mm=String(d.getMonth()+1).padStart(2,'0');
+  const yyyy=d.getFullYear();
+  let h=d.getHours(), m=d.getMinutes();
+  const ampm = h>=12 ? 'PM' : 'AM';
+  h = h%12; if(h===0) h=12;
+  return `${dd}/${mm}/${yyyy} ${h}:${String(m).padStart(2,'0')} ${ampm}`;
+}
+
+/* ======= Nueva función para obtener fecha y hora separadas ======= */
+function getDateTimeSeparated() {
+  const d = new Date();
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const yyyy = d.getFullYear();
+  let h = d.getHours();
+  let m = d.getMinutes();
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  h = h % 12;
+  if (h === 0) h = 12;
+  
+  return {
+    fecha: `${dd}/${mm}/${yyyy}`,
+    hora: `${h}:${String(m).padStart(2, '0')} ${ampm}`
+  };
+}
+
+/* ======= Persistencia ======= */
+function loadUsers(){ return JSON.parse(localStorage.getItem('ecp_users')||'[]'); }
+function saveUsers(arr){ localStorage.setItem('ecp_users', JSON.stringify(arr)); }
+function loadConfig(){ return JSON.parse(localStorage.getItem('ecp_config')||'{}'); }
+function saveConfig(cfg){ localStorage.setItem('ecp_config', JSON.stringify(cfg)); }
+
+// Función para cargar el historial
+function loadHistorial() { 
+  return JSON.parse(localStorage.getItem('ecp_historial') || '[]'); 
+}
+
+// Función para guardar el historial
+function saveHistorial(arr) { 
+  localStorage.setItem('ecp_historial', JSON.stringify(arr)); 
+}
+
+// Función para agregar un evento al historial
+function addToHistorial(alumno, maestro, descripcion) {
+  const datetime = getDateTimeSeparated();
+  const historial = loadHistorial();
+  
+  historial.push({
+    alumno: alumno || '',
+    maestro: maestro || '',
+    descripcion: descripcion || '',
+    fecha: datetime.fecha,
+    hora: datetime.hora
+  });
+  
+  saveHistorial(historial);
+}
+
+function ensureAdmin(){
+  const users = loadUsers();
+  if(!users.find(u=>u.role==='admin')){
+    users.push({ user:'Administrador', pass:'AdminEcoIGTLB', role:'admin' });
+    saveUsers(users);
+  }
+}
+ensureAdmin();
+
+/* ======= Defaults for conversion (used if admin leaves fields blank) ======= */
+const DEFAULTS = {
+  epPaper: 10,    // per libra
+  epLata: 1,      // per lata
+  epBotella: 1,   // per botella
+  epPerExtra: 100 // EP that convert to 1 extra
+};
+
+/* helpers to read config or default */
+function getEPForType(type){
+  const cfg = loadConfig();
+  if(type==='paper'){
+    const v = Number(cfg.epPaper);
+    return (v>0) ? v : DEFAULTS.epPaper;
+  }
+  if(type==='lata'){
+    const v = Number(cfg.epLata);
+    return (v>0) ? v : DEFAULTS.epLata;
+  }
+  if(type==='botella'){
+    const v = Number(cfg.epBotella);
+    return (v>0) ? v : DEFAULTS.epBotella;
+  }
+  return 0;
+}
+function getEPPerExtra(){
+  const cfg = loadConfig();
+  const v = Number(cfg.epPerExtra);
+  return (v>0) ? v : DEFAULTS.epPerExtra;
+}
+
+/* ======= Última sesión (auto-login) ======= */
+function setLastSession(user, role, loggedOut){
+  localStorage.setItem('ecp_last_session', JSON.stringify({user, role, loggedOut: !!loggedOut}));
+}
+function getLastSession(){
+  try{ return JSON.parse(localStorage.getItem('ecp_last_session')||'null'); }
+  catch{ return null; }
+}
+function tryAutoLogin(){
+  const last = getLastSession();
+  if(!last || last.loggedOut) return;
+  const [users, u] = findUserByRole(last.user || '', last.role);
+  if(!u){ return; }
+  session = { user: u.user, role: u.role };
+  if(u.role==='admin'){ go('dashAdmin'); return; }
+  if(u.role==='alumno') return renderAlumno(u);
+  if(u.role==='maestro') return renderMaestro(u);
+  if(u.role==='encargado') return renderEncargado(u);
+}
+
+/* ======= Estado sesión ======= */
+let session = null;
+
+/* ======= Navegación ======= */
+function go(id){
+  document.querySelectorAll('.container > section').forEach(s=>s.classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+}
+
+/* ======= Helpers ======= */
+const reservedAdmins = ['administrador','admin','administrator'];
+function isReservedName(name){ return reservedAdmins.includes(String(name||'').toLowerCase()); }
+
+function findUserByRole(username, role){
+  const users = loadUsers();
+  return [users, users.find(u=>u.role===role && u.user && u.user.toLowerCase()===String(username).toLowerCase())];
+}
+function upsertUser(obj){
+  const users = loadUsers();
+  const i = users.findIndex(u=>u.role===obj.role && u.user.toLowerCase()===obj.user.toLowerCase());
+  if(i>=0) users[i]=obj; else users.push(obj);
+  saveUsers(users);
+}
+
+// Función para renderizar el historial en formato de tabla
+function renderHistorialTable(elId, filtro = null, valor = null) {
+  const el = document.getElementById(elId);
+  let historial = loadHistorial();
+  
+  // Filtrar historial si se especifica
+  if (filtro && valor) {
+    historial = historial.filter(item => item[filtro] === valor);
+  }
+  
+  // Ordenar por fecha y hora (más reciente primero)
+  historial.sort((a, b) => {
+    const dateA = new Date(a.fecha.split('/').reverse().join('-') + ' ' + a.hora);
+    const dateB = new Date(b.fecha.split('/').reverse().join('-') + ' ' + b.hora);
+    return dateB - dateA;
+  });
+  
+  if (historial.length === 0) {
+    el.innerHTML = '<div style="padding:10px"><small>Sin movimientos.</small></div>';
+    return;
+  }
+  
+  let html = `
+    <table>
+      <thead>
+        <tr>
+          <th>Alumno</th>
+          <th>Maestro</th>
+          <th>Descripción</th>
+          <th>Fecha</th>
+          <th>Hora</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+  
+  historial.forEach(item => {
+    html += `
+      <tr>
+        <td>${escapeHtml(item.alumno)}</td>
+        <td>${escapeHtml(item.maestro)}</td>
+        <td>${escapeHtml(item.descripcion)}</td>
+        <td>${escapeHtml(item.fecha)}</td>
+        <td>${escapeHtml(item.hora)}</td>
+      </tr>
+    `;
+  });
+  
+  html += `
+      </tbody>
+    </table>
+  `;
+  
+  el.innerHTML = html;
+}
+
+function escapeHtml(str){
+  return String(str)
+    .replaceAll('&','&amp;')
+    .replaceAll('<','&lt;')
+    .replaceAll('>','&gt;')
+    .replaceAll('"','&quot;')
+    .replaceAll("'",'&#039;');
+}
+function toggleBox(id){
+  const el=document.getElementById(id);
+  if(el) el.classList.toggle('hidden');
+}
+
+/* ======= Mostrar/ocultar campos según rol ======= */
+function toggleAlumnoFields(selectId, fieldsId){
+  const role = document.getElementById(selectId).value;
+  const box  = document.getElementById(fieldsId);
+  if(role==='alumno'){ box.classList.remove('hidden'); }
+  else{ box.classList.add('hidden'); box.querySelectorAll('input').forEach(i=>i.value=''); }
+}
+
+/* ======= Toggle contraseña ======= */
+function togglePwd(inputId, btnEl){
+  const inp = document.getElementById(inputId);
+  if(!inp) return;
+  if(inp.type==='password'){ inp.type='text'; if(btnEl) btnEl.textContent='Ocultar'; }
+  else { inp.type='password'; if(btnEl) btnEl.textContent='Mostrar'; }
+}
+
+/* ======= Validación contraseña ======= */
+function validPass(p){ return typeof p==='string' && p.length>=8 && p.length<=20; }
+
+/* ======= Acceso administrador (pantalla dedicada) ======= */
+function doAdminAccess(){
+  const pass = document.getElementById('adminPass').value;
+  const err  = document.getElementById('adminErr');
+  err.textContent='';
+  const [users, admin] = findUserByRole('Administrador','admin');
+  if(!admin){ ensureAdmin(); return doAdminAccess(); }
+  if(!validPass(pass)) return err.textContent='Contraseña inválida (8–20).';
+  if(admin.pass!==pass) return err.textContent='Contraseña incorrecta.';
+  session = { user: admin.user, role: admin.role };
+  setLastSession(admin.user, admin.role, false);
+  document.getElementById('adminPass').value='';
+  go('dashAdmin');
+}
+
+/* ======= Login ======= */
+function doLogin(){
+  let role = document.getElementById('lRole').value;
+  const user = document.getElementById('lUser').value.trim();
+  const pass = document.getElementById('lPass').value;
+  const g    = document.getElementById('lGrado').value.trim();
+  const s    = document.getElementById('lSeccion').value.trim();
+  const err  = document.getElementById('lError'); err.textContent='';
+
+  if(!user) return err.textContent='Ingresa el usuario.';
+  if(!pass) return err.textContent='Ingresa la contraseña.';
+
+  // Bloquear intento de admin por login normal
+  if(isReservedName(user)){
+    return err.textContent="Para iniciar sesión como administrador usa el botón 'Acceder como administrador'.";
+  }
+
+  if(!role) return err.textContent='Selecciona un rol.';
+
+  const [users, u] = findUserByRole(user, role);
+  if(!u) return err.textContent='Usuario/rol no existe.';
+
+  if(role==='alumno'){
+    if(!g || !s) return err.textContent='Alumno: grado y sección son obligatorios.';
+    if(u.pass!==pass) return err.textContent='Contraseña incorrecta.';
+    if(Number(u.grado)!==Number(g) || Number(u.seccion)!==Number(s)) return err.textContent='Grado o sección incorrectos.';
+    session = { user: u.user, role: u.role };
+    setLastSession(u.user, u.role, false);
+    return renderAlumno(u);
+  }
+
+  // Maestro / Encargado
+  if(u.pass!==pass) return err.textContent='Contraseña incorrecta.';
+  session = { user: u.user, role: u.role };
+  setLastSession(u.user, u.role, false);
+  if(u.role==='maestro') return renderMaestro(u);
+  if(u.role==='encargado') return renderEncargado(u);
+}
+
+function logout(){
+  if(session){ setLastSession(session.user, session.role, true); }
+  session=null; go('home');
+}
+
+/* ======= Navegadores de secciones: admin/encargado/general ======= */
+function openAdminSection(sectionId){
+  if(!session || session.role!=='admin'){ alert('Acceso denegado.'); return; }
+  // Pre-fill config fields when opening config sections
+  if(sectionId==='admin_config_ep'){
+    const cfg = loadConfig();
+    document.getElementById('cfgPaper').value = (cfg.epPaper>0) ? cfg.epPaper : '';
+    document.getElementById('cfgLata').value  = (cfg.epLata>0) ? cfg.epLata : '';
+    document.getElementById('cfgBotella').value = (cfg.epBotella>0) ? cfg.epBotella : '';
+    document.getElementById('cfgEPMsg').textContent='';
+  }
+  if(sectionId==='admin_config_extra'){
+    const cfg = loadConfig();
+    document.getElementById('cfgExtra').value = (cfg.epPerExtra>0) ? cfg.epPerExtra : '';
+    document.getElementById('cfgExtraMsg').textContent='';
+  }
+  go(sectionId);
+}
+function goBackToAdmin(){
+  go('dashAdmin');
+}
+function openEncSection(sectionId){
+  if(!session || session.role!=='encargado'){ alert('Acceso denegado.'); return; }
+  go(sectionId);
+}
+function goBackToEncargado(){
+  // re-render encargado dashboard (to clear fields)
+  const [users,u]=findUserByRole(session ? session.user : '', session ? session.role : '');
+  if(u) renderEncargado(u);
+  go('dashEncargado');
+}
+
+/* Generic: open small feature that belongs to role (password change, etc.) */
+function openSectionFromRole(sectionId){
+  if(!session) return alert('No hay sesión activa.');
+  go(sectionId);
+}
+function goBackToRoleDashboard(){
+  if(!session) return go('home');
+  const role = session.role;
+  if(role==='admin') go('dashAdmin');
+  else if(role==='alumno'){
+    const [users,u] = findUserByRole(session.user,'alumno');
+    if(u) renderAlumno(u);
+    go('dashAlumno');
+  } else if(role==='maestro'){
+    const [users,u] = findUserByRole(session.user,'maestro');
+    if(u) renderMaestro(u);
+    go('dashMaestro');
+  } else if(role==='encargado'){
+    const [users,u] = findUserByRole(session.user,'encargado');
+    if(u) renderEncargado(u);
+    go('dashEncargado');
+  } else go('home');
+}
+
+/* ======= Admin handlers (reutilizan ids que están en las secciones nuevas) ======= */
+function adminRegister(){
+  const rRole = document.getElementById('rRole').value;
+  const rUser = document.getElementById('rUser').value.trim();
+  const rPass = document.getElementById('rPass').value;
+  const rGrado= document.getElementById('rGrado').value.trim();
+  const rSecc = document.getElementById('rSeccion').value.trim();
+  const msg   = document.getElementById('rMsg'); msg.textContent='';
+
+  if(!rUser) return msg.textContent='Usuario requerido.';
+  if(isReservedName(rUser)) return msg.textContent='No se puede registrar al administrador.';
+  if(!validPass(rPass)) return msg.textContent='Contraseña inválida (8–20).';
+  const [users, exists] = findUserByRole(rUser, rRole);
+  if(exists) return msg.textContent='Ese usuario ya existe en ese rol.';
+
+  if(rRole==='alumno'){
+    if(!rGrado || !rSecc) return msg.textContent='Grado y sección requeridos para alumnos.';
+    const obj = { user:rUser, pass:rPass, role:'alumno', grado:Number(rGrado), seccion:Number(rSecc), eco:0, extra:0 };
+    upsertUser(obj);
+  } else if(rRole==='maestro' || rRole==='encargado'){
+    const obj = { user:rUser, pass:rPass, role:rRole };
+    upsertUser(obj);
+  }
+  document.getElementById('rUser').value='';
+  document.getElementById('rPass').value='';
+  document.getElementById('rGrado').value='';
+  document.getElementById('rSeccion').value='';
+  alert('Usuario registrado.');
+}
+
+/* Confirm helpers */
+function confirmDeleteUser(name, role, isData, extraTxt=''){
+  const action = isData ? 'borrar los datos del' : 'borrar al';
+  return confirm(`¿Seguro que deseas ${action} usuario "${name}" (rol: ${role})${extraTxt}? Esta acción no se puede deshacer.`);
+}
+function confirmMass(role, isData, count){
+  const action = isData ? 'borrar los datos de' : 'borrar';
+  let roleName = role;
+  if (role === 'encargado') roleName = 'maestro encargado de reciclaje';
+  return confirm(`Se ${action} ${count} usuario(s) del rol "${roleName}". ¿Confirmas?`);
+}
+
+function adminDeleteUser(){
+  const role = document.getElementById('dRole').value;
+  const uName = document.getElementById('dUser').value.trim();
+  const g = document.getElementById('dGrado').value.trim();
+  const s = document.getElementById('dSeccion').value.trim();
+  if(!role) return alert('Selecciona el rol.');
+  if(!uName) return alert('Ingresa un usuario.');
+  if(isReservedName(uName)) return alert('No se puede borrar al administrador.');
+
+  const users = loadUsers();
+  let idx = -1;
+  let extra = '';
+  if(role==='alumno'){
+    if(!g || !s) return alert('Para alumnos, grado y sección son obligatorios.');
+    extra = `, grado ${g}, sección ${s}`;
+    idx = users.findIndex(x=>x.role==='alumno'
+      && x.user.toLowerCase()===uName.toLowerCase()
+      && Number(x.grado)===Number(g)
+      && Number(x.seccion)===Number(s));
+  }else{
+    idx = users.findIndex(x=>x.role===role && x.user.toLowerCase()===uName.toLowerCase());
+  }
+  if(idx<0) return alert('Usuario/rol no encontrado.');
+
+  let roleName = role;
+  if (role === 'encargado') roleName = 'maestro encargado de reciclaje';
+  
+  if(!confirmDeleteUser(uName, roleName, false, extra)) return;
+  users.splice(idx,1);
+  saveUsers(users);
+  alert('Usuario borrado.');
+}
+
+function adminDeleteByRole(role){
+  const all = loadUsers();
+  const count = all.filter(u=>u.role===role).length;
+  if(count===0) return alert('No hay usuarios para borrar en ese rol.');
+  
+  let roleName = role;
+  if (role === 'encargado') roleName = 'maestro encargado de reciclaje';
+  
+  if(!confirmMass(roleName, false, count)) return;
+  const users = all.filter(u=>!(u.role===role));
+  saveUsers(users);
+  alert('Usuarios borrados por rol.');
+}
+
+function wipeOnlyData(u){
+  if(u.role==='alumno'){ u.eco=0; u.extra=0; }
+  return u;
+}
+
+function adminWipeUser(){
+  const role = document.getElementById('wRole').value;
+  const name = document.getElementById('wUser').value.trim();
+  const g = document.getElementById('wGrado').value.trim();
+  const s = document.getElementById('wSeccion').value.trim();
+  if(!role) return alert('Selecciona el rol.');
+  if(!name) return alert('Ingresa un usuario.');
+  if(isReservedName(name)) return alert('No se puede borrar al administrador.');
+
+  const users = loadUsers();
+  let idx = -1;
+  let extra='';
+  if(role==='alumno'){
+    if(!g || !s) return alert('Para alumnos, grado y sección son obligatorios.');
+    extra = `, grado ${g}, sección ${s}`;
+    idx = users.findIndex(u=>u.role==='alumno'
+      && u.user.toLowerCase()===name.toLowerCase()
+      && Number(u.grado)===Number(g)
+      && Number(u.seccion)===Number(s));
+  }else{
+    idx = users.findIndex(u=>u.role===role && u.user.toLowerCase()===name.toLowerCase());
+  }
+  if(idx<0) return alert('Usuario/rol no encontrado.');
+  
+  let roleName = role;
+  if (role === 'encargado') roleName = 'maestro encargado de reciclaje';
+  
+  if(!confirmDeleteUser(name, roleName, true, extra)) return;
+  users[idx] = wipeOnlyData(users[idx]);
+  saveUsers(users);
+  alert('Datos del usuario borrados.');
+}
+
+function adminWipeByRole(role){
+  const all = loadUsers();
+  const count = all.filter(u=>u.role===role).length;
+  if(count===0) return alert('No hay usuarios en ese rol.');
+  
+  let roleName = role;
+  if (role === 'encargado') roleName = 'maestro encargado de reciclaje';
+  
+  if(!confirmMass(roleName, true, count)) return;
+  const users = all.map(u=> u.role===role ? wipeOnlyData(u) : u);
+  saveUsers(users);
+  alert('Datos borrados por rol.');
+}
+
+function adminUpdateGrade(){
+  const name = document.getElementById('uUser').value.trim();
+  const g = document.getElementById('uGrado').value.trim();
+  const s = document.getElementById('uSeccion').value.trim();
+  const msg = document.getElementById('uMsg'); msg.textContent='';
+  if(!name || !g || !s) return msg.textContent='Usuario, grado y sección requeridos.';
+  const [users, u] = findUserByRole(name, 'alumno');
+  if(!u) return msg.textContent='Alumno no encontrado.';
+  u.grado = Number(g); u.seccion = Number(s);
+  upsertUser(u);
+  alert('Grado y sección actualizados.');
+  document.getElementById('uUser').value='';
+  document.getElementById('uGrado').value='';
+  document.getElementById('uSeccion').value='';
+}
+
+/* ======= Ver usuarios (Admin) + Buscador ======= */
+let viewCurrentRole = null;
+function adminViewUsers(role){
+  const title = document.getElementById('viewTitle');
+  const container = document.getElementById('viewTable');
+  const hint = document.getElementById('viewHint');
+  const search = document.getElementById('viewSearch');
+
+  viewCurrentRole = role;
+  const users = loadUsers().filter(u=>u.role===role);
+
+  let html='';
+  if(role==='alumno'){
+    title.textContent = 'Alumnos registrados';
+    if(users.length===0){ container.innerHTML='<div style="padding:10px"><small>No hay alumnos registrados.</small></div>'; hint.classList.add('hidden'); search.classList.add('hidden'); return; }
+    html += '<table id="viewTbl"><thead><tr><th>Usuario</th><th>Grado</th><th>Sección</th></tr></thead><tbody>';
+    users.forEach(u=>{
+      html += `<tr><td>${escapeHtml(u.user)}</td><td>${u.grado ?? '-'}</td><td>${u.seccion ?? '-'}</td></tr>`;
+    });
+    html += '</tbody></table>';
+    container.innerHTML = html; hint.classList.remove('hidden'); search.classList.remove('hidden');
+  }else if(role==='maestro'){
+    title.textContent = 'Maestros de clase registrados';
+    if(users.length===0){ container.innerHTML='<div style="padding:10px"><small>No hay maestros registrados.</small></div>'; hint.classList.add('hidden'); search.classList.add('hidden'); return; }
+    html += '<table id="viewTbl"><thead><tr><th>Usuario</th></tr></thead><tbody>';
+    users.forEach(u=>{ html += `<tr><td>${escapeHtml(u.user)}</td></tr>`; });
+    html += '</tbody></table>';
+    container.innerHTML = html; hint.classList.remove('hidden'); search.classList.remove('hidden');
+  }else if(role==='encargado'){
+    title.textContent = 'Maestros encargados de reciclaje registrados';
+    if(users.length===0){ container.innerHTML='<div style="padding:10px"><small>No hay maestros encargados de reciclaje registrados.</small></div>'; hint.classList.add('hidden'); search.classList.add('hidden'); return; }
+    html += '<table id="viewTbl"><thead><tr><th>Usuario</th></tr></thead><tbody>';
+    users.forEach(u=>{ html += `<tr><td>${escapeHtml(u.user)}</td></tr>`; });
+    html += '</tbody></table>';
+    container.innerHTML = html; hint.classList.remove('hidden'); search.classList.remove('hidden');
+  }
+  filterViewTable(search.value || '');
+}
+document.addEventListener('input', function(e){
+  if(e.target && e.target.id==='viewSearch') filterViewTable(e.target.value);
+});
+function filterViewTable(q){
+  const tbl = document.getElementById('viewTbl');
+  if(!tbl) return;
+  const term = String(q||'').toLowerCase();
+  const rows = tbl.querySelectorAll('tbody tr');
+  rows.forEach(r=>{
+    const text = r.textContent.toLowerCase();
+    r.style.display = text.includes(term) ? '' : 'none';
+  });
+}
+
+/* ======= Cambiar nombre de usuario (Admin) ======= */
+function adminRenameUser(){
+  const role = document.getElementById('renRole').value;
+  const curr = document.getElementById('renUser').value.trim();
+  const newU = document.getElementById('renNewUser').value.trim();
+  const g = document.getElementById('renGrado').value.trim();
+  const s = document.getElementById('renSeccion').value.trim();
+  if(!role) return alert('Selecciona el rol.');
+  if(!curr || !newU) return alert('Ingresa usuario actual y nuevo.');
+  if(isReservedName(curr) || isReservedName(newU)) return alert('No se puede renombrar al administrador.');
+  const [users, u] = findUserByRole(curr, role);
+  if(!u) return alert('Usuario/rol no encontrado.');
+  if(role==='alumno'){
+    if(!g || !s) return alert('Alumno: indica grado y sección actuales.');
+    if(Number(u.grado)!==Number(g) || Number(u.seccion)!==Number(s)) return alert('Grado o sección no coinciden con el alumno.');
+  }
+  if(curr.toLowerCase()===newU.toLowerCase()) return alert('El nuevo usuario es igual al actual.');
+  const exists = loadUsers().find(x=>x.role===role && x.user.toLowerCase()===newU.toLowerCase());
+  if(exists) return alert('Ya existe ese usuario en ese rol.');
+  u.user = newU;
+  upsertUser(u);
+  alert('Nombre de usuario actualizado.');
+  document.getElementById('renUser').value='';
+  document.getElementById('renNewUser').value='';
+  document.getElementById('renGrado').value='';
+  document.getElementById('renSeccion').value='';
+}
+
+/* ======= Cambiar contraseña (Admin) ======= */
+function adminChangePass(){
+  const role = document.getElementById('pcRole').value;
+  const name = document.getElementById('pcUser').value.trim();
+  const pass = document.getElementById('pcPass').value;
+  const g = document.getElementById('pcGrado').value.trim();
+  const s = document.getElementById('pcSeccion').value.trim();
+  if(!role) return alert('Selecciona el rol.');
+  if(!name) return alert('Ingresa el usuario.');
+  if(isReservedName(name)) return alert('No se puede cambiar la contraseña del administrador aquí.');
+  if(!validPass(pass)) return alert('Contraseña inválida (8–20).');
+  const [users, u] = findUserByRole(name, role);
+  if(!u) return alert('Usuario/rol no encontrado.');
+  if(role==='alumno'){
+    if(!g || !s) return alert('Alumno: indica grado y sección actuales.');
+    if(Number(u.grado)!==Number(g) || Number(u.seccion)!==Number(s)) return alert('Grado o sección no coinciden con el alumno.');
+  }
+  u.pass = pass;
+  upsertUser(u);
+  alert('Contraseña actualizada.');
+  document.getElementById('pcUser').value='';
+  document.getElementById('pcPass').value='';
+  document.getElementById('pcGrado').value='';
+  document.getElementById('pcSeccion').value='';
+}
+
+/* ======= Admin: guardar configuración ======= */
+function adminSaveConfigEP(){
+  const p = document.getElementById('cfgPaper').value.trim();
+  const l = document.getElementById('cfgLata').value.trim();
+  const b = document.getElementById('cfgBotella').value.trim();
+  if(p!=='' && Number(p)<=0) return document.getElementById('cfgEPMsg').textContent='Valor inválido para papel (debe ser > 0 o dejar en blanco).';
+  if(l!=='' && Number(l)<=0) return document.getElementById('cfgEPMsg').textContent='Valor inválido para latas (debe ser > 0 o dejar en blanco).';
+  if(b!=='' && Number(b)<=0) return document.getElementById('cfgEPMsg').textContent='Valor inválido para botellas (debe ser > 0 o dejar en blanco).';
+  const cfg = loadConfig();
+  cfg.epPaper = (p==='') ? null : Number(p);
+  cfg.epLata = (l==='') ? null : Number(l);
+  cfg.epBotella = (b==='') ? null : Number(b);
+  saveConfig(cfg);
+  document.getElementById('cfgEPMsg').textContent='';
+  alert('Conversión EcoPoints guardada.');
+}
+
+function adminSaveConfigExtra(){
+  const x = document.getElementById('cfgExtra').value.trim();
+  if(x!=='' && Number(x)<=0) return document.getElementById('cfgExtraMsg').textContent='Valor inválido (debe ser > 0 o dejar en blanco).';
+  const cfg = loadConfig();
+  cfg.epPerExtra = (x==='') ? null : Number(x);
+  saveConfig(cfg);
+  document.getElementById('cfgExtraMsg').textContent='';
+  alert('Conversión a puntos extra guardada.');
+}
+
+/* ======= Alumno ======= */
+function renderAlumno(u){
+  go('dashAlumno');
+  document.getElementById('alNombre').textContent = u.user;
+  document.getElementById('alGrado').textContent  = u.grado ?? '-';
+  document.getElementById('alSeccion').textContent= u.seccion ?? '-';
+  document.getElementById('alEco').textContent    = u.eco ?? 0;
+  document.getElementById('alExtra').textContent  = u.extra ?? 0;
+  document.getElementById('alNewPass') && (document.getElementById('alNewPass').value='');
+}
+function alumnoChangePass(){
+  if(!session || session.role!=='alumno') return;
+  const pass = document.getElementById('alNewPass').value;
+  if(!validPass(pass)) return alert('Contraseña inválida (8–20).');
+  const [users, u] = findUserByRole(session.user, 'alumno');
+  if(!u) return;
+  u.pass = pass; upsertUser(u);
+  alert('Contraseña actualizada.');
+  document.getElementById('alNewPass').value='';
+  go('dashAlumno');
+}
+
+/* ======= Maestro ======= */
+function renderMaestro(u){
+  go('dashMaestro');
+  document.getElementById('mNombre').textContent = u.user;
+  document.getElementById('mResumen').classList.add('hidden');
+  ['mUser','mGrado','mSeccion','mClase','mPuntos'].forEach(id=>document.getElementById(id) && (document.getElementById(id).value=''));
+  document.getElementById('mNewPass') && (document.getElementById('mNewPass').value='');
+}
+function maestroFetchAlumno(){
+  const aUser = document.getElementById('mUser').value.trim();
+  const g = document.getElementById('mGrado').value.trim();
+  const s = document.getElementById('mSeccion').value.trim();
+  if(!aUser || !g || !s){ alert('Debes ingresar usuario, grado y sección del alumno.'); return null; }
+  const [users, al] = findUserByRole(aUser, 'alumno');
+  if(!al || Number(al.grado)!==Number(g) || Number(al.seccion)!==Number(s)){
+    alert('Alumno no encontrado.'); return null;
+  }
+  return al;
+}
+function maestroConsultar(){
+  if(!session || session.role!=='maestro') return;
+  const al = maestroFetchAlumno(); if(!al) return;
+  document.getElementById('mResumen').classList.remove('hidden');
+  document.getElementById('mEco').textContent = al.eco ?? 0;
+  document.getElementById('mExtra').textContent = al.extra ?? 0;
+}
+function maestroCanjear(){
+  if(!session || session.role!=='maestro') return;
+  const clase = document.getElementById('mClase').value.trim();
+  const pts = parseInt(document.getElementById('mPuntos').value,10);
+  if(!clase || !pts || pts<=0) return alert('Ingresa clase y puntos extra válidos.');
+  const al = maestroFetchAlumno(); if(!al) return;
+
+  if((al.extra??0) < pts) return alert('El alumno no tiene suficientes puntos extra.');
+
+  al.extra -= pts;
+  // Registrar en el historial
+  addToHistorial(al.user, session.user, `Canje: -${pts} punto(s) extra en "${clase}"`);
+  
+  upsertUser(al);
+  
+  document.getElementById('mResumen').classList.remove('hidden');
+  document.getElementById('mEco').textContent = al.eco ?? 0;
+  document.getElementById('mExtra').textContent = al.extra ?? 0;
+  alert('Canje aplicado.');
+}
+function maestroChangePass(){
+  if(!session || session.role!=='maestro') return;
+  const pass = document.getElementById('mNewPass').value;
+  if(!validPass(pass)) return alert('Contraseña inválida (8–20).');
+  const [users, u] = findUserByRole(session.user, 'maestro');
+  if(!u) return;
+  u.pass = pass; upsertUser(u);
+  alert('Contraseña actualizada.');
+  document.getElementById('mNewPass').value='';
+  go('dashMaestro');
+}
+
+/* ======= Encargado ======= */
+function renderEncargado(u){
+  go('dashEncargado');
+  document.getElementById('eNombre').textContent = u.user;
+  // limpiar campos
+  ['eUserPaper','eGradoPaper','eSeccionPaper','eQtyPaper',
+   'eUserLata','eGradoLata','eSeccionLata','eQtyLata',
+   'eUserBotella','eGradoBotella','eSeccionBotella','eQtyBotella'].forEach(id=>{
+     const el = document.getElementById(id); if(el) el.value='';
+  });
+  document.getElementById('eNewPass') && (document.getElementById('eNewPass').value='');
+}
+function encRegistrarType(type){
+  if(!session || session.role!=='encargado') return;
+  let aUser,g,s,qty;
+  if(type==='paper'){
+    aUser = document.getElementById('eUserPaper').value.trim();
+    g = document.getElementById('eGradoPaper').value.trim();
+    s = document.getElementById('eSeccionPaper').value.trim();
+    qty = parseFloat(document.getElementById('eQtyPaper').value);
+  } else if(type==='lata'){
+    aUser = document.getElementById('eUserLata').value.trim();
+    g = document.getElementById('eGradoLata').value.trim();
+    s = document.getElementById('eSeccionLata').value.trim();
+    qty = parseInt(document.getElementById('eQtyLata').value,10);
+  } else if(type==='botella'){
+    aUser = document.getElementById('eUserBotella').value.trim();
+    g = document.getElementById('eGradoBotella').value.trim();
+    s = document.getElementById('eSeccionBotella').value.trim();
+    qty = parseInt(document.getElementById('eQtyBotella').value,10);
+  } else {
+    return alert('Tipo desconocido.');
+  }
+
+  if(!aUser || !g || !s) return alert('Debes ingresar usuario, grado y sección del alumno.');
+  if(!qty || qty<=0) return alert('Ingresa una cantidad válida.');
+
+  const [users, al] = findUserByRole(aUser, 'alumno');
+  if(!al || Number(al.grado)!==Number(g) || Number(al.seccion)!==Number(s)){
+    return alert('Alumno no encontrado.');
+  }
+
+  // Calcular EcoPoints según configuración
+  const epPerUnit = getEPForType(type);
+  const ep = Math.round(qty * epPerUnit);
+  al.eco = (al.eco ?? 0) + ep;
+
+  // Descripción tipo
+  const tipoTexto = (type==='paper') ? `${qty.toFixed(2)} lb de papel` : (type==='lata') ? `${qty} lata(s)` : `${qty} botella(s)`;
+  
+  // Registrar en el historial
+  addToHistorial(al.user, session.user, `Reciclaje: ${tipoTexto} → +${ep} EP`);
+
+  // Conversión automática a puntos extra según epPerExtra
+  const epPerExtra = getEPPerExtra();
+  let nuevosExtras = Math.floor(al.eco / epPerExtra);
+  if(nuevosExtras>0){
+    for(let i=0;i<nuevosExtras;i++){
+      al.eco -= epPerExtra;
+      al.extra = (al.extra ?? 0) + 1;
+      // Registrar conversión automática en el historial (sin maestro)
+      addToHistorial(al.user, '', `Conversión automática: -${epPerExtra} EP → +1 punto extra`);
+    }
+  }
+
+  upsertUser(al);
+  alert('Reciclaje registrado.');
+  goBackToEncargado();
+}
+function encargadoChangePass(){
+  if(!session || session.role!=='encargado') return;
+  const pass = document.getElementById('eNewPass').value;
+  if(!validPass(pass)) return alert('Contraseña inválida (8–20).');
+  const [users, u] = findUserByRole(session.user, 'encargado');
+  if(!u) return;
+  u.pass = pass; upsertUser(u);
+  alert('Contraseña actualizada.');
+  document.getElementById('eNewPass').value='';
+  go('dashEncargado');
+}
+
+/* ======= Historial global (pantalla completa) ======= */
+function showHistory(){
+  if(!session) return alert('No hay sesión activa.');
+  const role = session.role;
+  const user = session.user;
+  const [users,u] = findUserByRole(user, role);
+  if(!u) return alert('Usuario no encontrado.');
+
+  document.getElementById('histFullTitle').textContent = `Historial — ${u.user} (${role})`;
+  
+  if (role === 'alumno') {
+    renderHistorialTable('histFullList', 'alumno', u.user);
+  } else if (role === 'maestro' || role === 'encargado') {
+    renderHistorialTable('histFullList', 'maestro', u.user);
+  } else if (role === 'admin') {
+    renderHistorialTable('histFullList');
+  }
+  
+  go('histFull');
+}
+
+/* ======= Funciones para consultar historial desde admin ======= */
+function openAdminHistorialSection(sectionId){
+  go(sectionId);
+}
+
+function goBackToAdminHistorial(){
+  go('admin_historial');
+}
+
+function adminConsultarHistorialAlumno(){
+  const aUser = document.getElementById('ahUserAlumno').value.trim();
+  const g = document.getElementById('ahGradoAlumno').value.trim();
+  const s = document.getElementById('ahSeccionAlumno').value.trim();
+  
+  if(!aUser || !g || !s){ alert('Debes ingresar usuario, grado y sección del alumno.'); return; }
+  
+  const [users, al] = findUserByRole(aUser, 'alumno');
+  if(!al || Number(al.grado)!==Number(g) || Number(al.seccion)!==Number(s)){
+    alert('Alumno no encontrado.'); return;
+  }
+  
+  renderHistorialTable('ahResultadoAlumno', 'alumno', al.user);
+}
+
+function adminConsultarHistorialMaestro(){
+  const mUser = document.getElementById('ahUserMaestro').value.trim();
+  
+  if(!mUser){ alert('Debes ingresar usuario del maestro.'); return; }
+  
+  const [users, m] = findUserByRole(mUser, 'maestro');
+  if(!m){
+    alert('Maestro no encontrado.'); return;
+  }
+  
+  renderHistorialTable('ahResultadoMaestro', 'maestro', m.user);
+}
+
+function adminConsultarHistorialEncargado(){
+  const eUser = document.getElementById('ahUserEncargado').value.trim();
+  
+  if(!eUser){ alert('Debes ingresar usuario del maestro encargado de reciclaje.'); return; }
+  
+  const [users, e] = findUserByRole(eUser, 'encargado');
+  if(!e){
+    alert('Maestro encargado de reciclaje no encontrado.'); return;
+  }
+  
+  renderHistorialTable('ahResultadoEncargado', 'maestro', e.user);
+}
+
+/* ======= Funciones para consultar historial de alumnos desde maestros ======= */
+function maestroConsultarHistorialAlumno(){
+  const aUser = document.getElementById('mhUserAlumno').value.trim();
+  const g = document.getElementById('mhGradoAlumno').value.trim();
+  const s = document.getElementById('mhSeccionAlumno').value.trim();
+  
+  if(!aUser || !g || !s){ alert('Debes ingresar usuario, grado y sección del alumno.'); return; }
+  
+  const [users, al] = findUserByRole(aUser, 'alumno');
+  if(!al || Number(al.grado)!==Number(g) || Number(al.seccion)!==Number(s)){
+    alert('Alumno no encontrado.'); return;
+  }
+  
+  renderHistorialTable('mhResultadoAlumno', 'alumno', al.user);
+}
+
+/* ======= Funciones para consultar historial de alumnos desde encargados ======= */
+function encargadoConsultarHistorialAlumno(){
+  const aUser = document.getElementById('ehUserAlumno').value.trim();
+  const g = document.getElementById('ehGradoAlumno').value.trim();
+  const s = document.getElementById('ehSeccionAlumno').value.trim();
+  
+  if(!aUser || !g || !s){ alert('Debes ingresar usuario, grado y sección del alumno.'); return; }
+  
+  const [users, al] = findUserByRole(aUser, 'alumno');
+  if(!al || Number(al.grado)!==Number(g) || Number(al.seccion)!==Number(s)){
+    alert('Alumno no encontrado.'); return;
+  }
+  
+  renderHistorialTable('ehResultadoAlumno', 'alumno', al.user);
+}
+
+/* ======= Listeners de UI ======= */
+document.addEventListener('DOMContentLoaded', ()=>{
+  // Mostrar/ocultar campos alumnos en formularios (IDs are present in admin_reg and admin_login)
+  const rRoleEl = document.getElementById('rRole');
+  if(rRoleEl) rRoleEl.addEventListener('change', ()=>toggleAlumnoFields('rRole','regAlumnoFields'));
+  const lRoleEl = document.getElementById('lRole');
+  if(lRoleEl) lRoleEl.addEventListener('change', ()=>toggleAlumnoFields('lRole','loginAlumnoFields'));
+
+  // Delete (por nombre): mostrar grado/sección si alumno
+  const dRoleEl = document.getElementById('dRole');
+  if(dRoleEl) dRoleEl.addEventListener('change', ()=>{
+    const v=document.getElementById('dRole').value;
+    const box=document.getElementById('delAlumnoFields');
+    if(v==='alumno') box.classList.remove('hidden');
+    else{ box.classList.add('hidden'); document.getElementById('dGrado').value=''; document.getElementById('dSeccion').value=''; }
+  });
+
+  // Wipe (por nombre): mostrar grado/sección si alumno
+  const wRoleEl = document.getElementById('wRole');
+  if(wRoleEl) wRoleEl.addEventListener('change', ()=>{
+    const v=document.getElementById('wRole').value;
+    const box=document.getElementById('wipeAlumnoFields');
+    if(v==='alumno') box.classList.remove('hidden');
+    else{ box.classList.add('hidden'); document.getElementById('wGrado').value=''; document.getElementById('wSeccion').value=''; }
+  });
+
+  // Rename/PassChange (admin) -> show alumno fields when role == alumno
+  const renRoleEl = document.getElementById('renRole');
+  if(renRoleEl) renRoleEl.addEventListener('change', ()=>{
+    const v=document.getElementById('renRole').value;
+    const box=document.getElementById('renAlumnoFields');
+    if(v==='alumno') box.classList.remove('hidden'); else{ box.classList.add('hidden'); document.getElementById('renGrado').value=''; document.getElementById('renSeccion').value=''; }
+  });
+  const pcRoleEl = document.getElementById('pcRole');
+  if(pcRoleEl) pcRoleEl.addEventListener('change', ()=>{
+    const v=document.getElementById('pcRole').value;
+    const box=document.getElementById('pcAlumnoFields');
+    if(v==='alumno') box.classList.remove('hidden'); else{ box.classList.add('hidden'); document.getElementById('pcGrado').value=''; document.getElementById('pcSeccion').value=''; }
+  });
+
+  // View search input listener
+  const vs = document.getElementById('viewSearch');
+  if(vs) vs.addEventListener('input', (e)=>filterViewTable(e.target.value));
+
+  tryAutoLogin();
+});
+</script>
+</body>
+</html>
